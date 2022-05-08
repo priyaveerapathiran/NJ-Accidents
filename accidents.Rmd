@@ -3,12 +3,17 @@ title: "accidents"
 output: html_document
 date: '2022-05-08'
 ---
+
+Install Packages
+
 ```{r}
 install.packages("plotly")
 install.packages('maps')
 install.packages('usmap')
 ```
 
+
+Importing Libraries
 
 ```{r}
 library(tidyverse)
@@ -21,6 +26,7 @@ library(choroplethrMaps)
 library(corrplot)
 ```
 
+View Data
 
 ```{r}
 View(FilteredData)
@@ -28,6 +34,10 @@ View(FilteredData)
 dim(FilteredData)
 
 ```
+
+DATA CLEANING
+
+Cleaning Date Column and converting it into Year, Month and Day
 
 
 ```{r}
@@ -41,6 +51,8 @@ FilteredData <- tidyr::separate(FilteredData,
 ```
 
 
+Removing columns with more missing values
+
 ```{r}
 
 accidents <- FilteredData[,!(colnames(FilteredData) %in% c( 'Distance.To.Cross.Street', 
@@ -53,11 +65,13 @@ accidents <- FilteredData[,!(colnames(FilteredData) %in% c( 'Distance.To.Cross.S
 ```
 
 
+Dropping rows with missing value
+
 ```{r}
 accidents <- accidents %>% drop_na(Latitude, Longitude)
 ```
 
-
+Converting Time into Hours and Minutes
 
 ```{r}
 
@@ -71,6 +85,8 @@ accidents$hours[is.na(accidents$hours)]<-median(accidents$hours,na.rm=TRUE)
 
 ```
 
+Converting columns from character to numeric
+
 ```{r}
 accidents$Route[is.na(accidents$Route)]<-mean(accidents$Route,na.rm=TRUE)
 accidents$Road.Character[is.na(accidents$Road.Character)]<-mean(accidents$Road.Character,na.rm=TRUE)
@@ -83,11 +99,15 @@ accidents$Road.Divided.By[is.na(accidents$Road.Divided.By)]<-mean(accidents$Road
 
 ```
 
+Adding column state
+
 
 ```{r}
 accidents$state <- 'NJ'
 ```
 
+
+Number of accidents in a year
 
 ```{r}
 total_acci <- accidents %>%
@@ -95,6 +115,8 @@ total_acci <- accidents %>%
               summarise(count_by_year = n())
 total_acci
 ```
+
+Visualizing number of accidents per month
 
 ```{r}
 accidents%>%
@@ -106,6 +128,7 @@ accidents%>%
   ggtitle('Number of Accidents per Month')
 ```
 
+Visualizing number of accidents by day
 
 ```{r}
 accidents%>%
@@ -117,6 +140,7 @@ accidents%>%
   ggtitle('Number of Accidents by Day')
 ```
 
+Accidents on Week of the Day
 
 ```{r}
 accidents%>%
@@ -129,6 +153,7 @@ accidents%>%
 
 ```
 
+Accidents vs Alcohol Involved
 
 ```{r}
 alcohol_count <- accidents %>%
@@ -142,9 +167,7 @@ ggplot(data = alcohol_count, aes(Month, alcohol_count)) +
              ggtitle('Monthly Accidents based on Alcohol Consumption')
 ```
 
-```{r}
-
-```
+Accidents with alcohol involved vs Week day
 
 
 
@@ -160,6 +183,8 @@ accidents%>%
 
 ```
 
+
+
 ```{r}
 
 accidents%>%
@@ -173,6 +198,8 @@ accidents%>%
 
 ```
 
+
+Injured vs Month
 
 ```{r}
 accidents <- accidents %>%
@@ -194,6 +221,7 @@ ggplot(data = injured, aes(Month, injured_count)) +
 
 ```
 
+Injured for Week of the Day
 
 ```{r}
 accidents%>%
@@ -208,6 +236,8 @@ accidents%>%
 ```
 
 
+Total killed vs Month
+
 ```{r}
 accidents%>%
   group_by(Month, Total.Killed)%>%
@@ -219,6 +249,8 @@ accidents%>%
   ggtitle('Number of People Killed for each Month')
 ```
 
+
+Accidents vs Crash code
 
 ```{r}
 accidents$Crash.Type.Code <- gsub("\\..*","",accidents$Crash.Type.Code)
@@ -235,6 +267,8 @@ crash_code %>%
 
 ```
 
+
+Accidents based on Gender
 
 ```{r}
 accidents$Driver.Sex = str_trim(accidents$Driver.Sex) 
@@ -253,15 +287,14 @@ ggplot(data = gender, aes(Month, count)) +
   ggtitle('Number of Accidents by Gender for each Month')
 ```
 
+Accidents based on Gender for week Day
+
 ```{r}
 gender_week <-  accidents %>% 
                group_by(Crash.Day.Of.Week,Driver.Sex)%>%
                filter(Driver.Sex != ' ')%>%
                summarise(accident_count =n())
-```
 
-
-```{r}
 ggplot(data = gender_week, aes(Crash.Day.Of.Week, accident_count)) +
   geom_line(group = 1, color = 'blue') +
   geom_point(color = 'blue')+
@@ -270,6 +303,8 @@ ggplot(data = gender_week, aes(Crash.Day.Of.Week, accident_count)) +
 
 
 ```
+
+Map view of number of accidents
 
 ```{r}
 accidents$Longitude <- abs(accidents$Longitude)
@@ -291,7 +326,7 @@ nj_base + geom_point(data = accidents, aes(x = Longitude, y = Latitude), inherit
 
 ```
 
-
+Correlation Map
 
 ```{r}
 correlation = cor(select(accidents, hours, Total.Killed, Total.Injured, Light.Condition, Total.Vehicles.Involved))
