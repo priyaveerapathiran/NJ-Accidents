@@ -1,0 +1,335 @@
+---
+title: "accidents"
+output: html_document
+date: '2022-05-08'
+---
+```{r}
+install.packages("plotly")
+install.packages('maps')
+install.packages('usmap')
+```
+
+
+```{r}
+library(tidyverse)
+library(lubridate)
+library(dplyr)
+library(plotly)
+library(usmap)
+library(choroplethr)
+library(choroplethrMaps)
+library(corrplot)
+```
+
+
+```{r}
+View(FilteredData)
+
+dim(FilteredData)
+
+```
+
+
+```{r}
+
+FilteredData$Crash.Date <- as.Date(FilteredData$Crash.Date, "%m/%d/%Y")
+
+FilteredData <- tidyr::separate(FilteredData, 
+                                Crash.Date, c('Year', 'Month', 'Day'),
+                                sep = "-",remove = FALSE)
+
+```
+
+
+```{r}
+
+accidents <- FilteredData[,!(colnames(FilteredData) %in% c( 'Distance.To.Cross.Street', 
+                                               'MilePost',
+                                               'Posted.Speed.Cross.Street',
+                                               'Driver.Physical.Status', 
+                                               'month',
+                                               'year','day'))]
+
+```
+
+
+```{r}
+accidents <- accidents %>% drop_na(Latitude, Longitude)
+```
+
+
+
+```{r}
+
+accidents <- accidents%>%
+  separate(Crash.Time, into = c("hours", "minutes"))
+
+accidents$hours <- as.numeric(accidents$hours)
+
+accidents$hours[is.na(accidents$hours)]<-median(accidents$hours,na.rm=TRUE)
+
+
+```
+
+```{r}
+accidents$Route[is.na(accidents$Route)]<-mean(accidents$Route,na.rm=TRUE)
+accidents$Road.Character[is.na(accidents$Road.Character)]<-mean(accidents$Road.Character,na.rm=TRUE)
+accidents$Surface.Condition[is.na(accidents$Surface.Condition)]<-mean(accidents$Surface.Condition,na.rm=TRUE)
+accidents$ Environmental.Condition[is.na(accidents$ Environmental.Condition)]<-mean(accidents$ Environmental.Condition,na.rm=TRUE)
+accidents$Temporary.Traffic.Control.Zone[is.na(accidents$Temporary.Traffic.Control.Zone)]<-mean(accidents$Temporary.Traffic.Control.Zone,na.rm=TRUE)
+accidents$Road.Surface.Type[is.na(accidents$Road.Surface.Type)]<-mean(accidents$Road.Surface.Type,na.rm=TRUE)
+accidents$Light.Condition[is.na(accidents$Light.Condition)]<-mean(accidents$Light.Condition,na.rm=TRUE)
+accidents$Road.Divided.By[is.na(accidents$Road.Divided.By)]<-mean(accidents$Road.Divided.By,na.rm=TRUE)
+
+```
+
+
+```{r}
+accidents$state <- 'NJ'
+```
+
+
+```{r}
+total_acci <- accidents %>%
+              group_by(Year)%>%
+              summarise(count_by_year = n())
+total_acci
+```
+
+```{r}
+accidents%>%
+  group_by(Month)%>%
+  summarise(accidents = n())%>%
+  ggplot(aes(Month, accidents))+
+  geom_line(group = 1, color = 'red')+
+  geom_point(color = 'red')+
+  ggtitle('Number of Accidents per Month')
+```
+
+
+```{r}
+accidents%>%
+  group_by(Day)%>%
+  summarise(count_by_day = n())%>%
+  ggplot(aes(Day, count_by_day))+
+  geom_line(group = 1, color = 'red')+
+  geom_point(color = 'red')+
+  ggtitle('Number of Accidents by Day')
+```
+
+
+```{r}
+accidents%>%
+  group_by(Crash.Day.Of.Week)%>%
+  summarise(accidents_by_week = n())%>%
+  ggplot(aes(Crash.Day.Of.Week, accidents_by_week))+
+  geom_line(group = 1, color = 'red')+
+  geom_point(color = 'red')+
+  ggtitle('Accidents vs Weekday')
+
+```
+
+
+```{r}
+alcohol_count <- accidents %>%
+                   group_by(Month, Alcohol.Involved)%>%
+                   summarise(alcohol_count = n())
+
+ggplot(data = alcohol_count, aes(Month, alcohol_count)) +
+              geom_line(group = 1, color = 'blue') +
+              geom_point(color = 'blue')+
+              facet_wrap(~ Alcohol.Involved, scales = 'free_y', nrow = 2)+
+             ggtitle('Monthly Accidents based on Alcohol Consumption')
+```
+
+```{r}
+
+```
+
+
+
+```{r}
+accidents%>%
+  group_by(Crash.Day.Of.Week, Alcohol.Involved)%>%
+  summarise(alcohol_involved = n())%>%
+  ggplot(aes(Crash.Day.Of.Week, alcohol_involved))+
+  geom_line(group = 1, color = 'red')+
+  geom_point(color = 'red')+
+  facet_wrap(~Alcohol.Involved, scales = 'free_y', nrow = 2)+
+  ggtitle('Weekly Accidents vs Alcohol Involved')
+
+```
+
+```{r}
+
+accidents%>%
+  group_by(Month,Crash.Day.Of.Week)%>%
+  summarise(accident_count = n())%>%
+  ggplot(aes(Crash.Day.Of.Week, accident_count))+
+  geom_line(group = 1, color = 'red')+
+  geom_point(color = 'red')+
+  facet_wrap(~ Month, scale = 'free_x')+
+  ggtitle('Number of Accidents in Weekday for each Month')
+
+```
+
+
+```{r}
+accidents <- accidents %>%
+             mutate(injured = ifelse(
+                     accidents$Total.Injured == 0, "No", "Yes"))
+
+
+injured <- accidents%>%
+            group_by(Month, injured)%>%
+            summarise(injured_count = n())
+  
+
+
+ggplot(data = injured, aes(Month, injured_count)) +
+  geom_line(group = 1, color = 'blue') +
+  geom_point(color = 'blue')+
+  facet_wrap(~ injured, scales = 'free_y', nrow = 2)+
+  ggtitle('Accident Injured vs Month')
+
+```
+
+
+```{r}
+accidents%>%
+  group_by(Crash.Day.Of.Week, injured)%>%
+  summarise(injured_count = n())%>%
+  ggplot(aes(Crash.Day.Of.Week, injured_count))+
+  geom_line(group = 1, color = 'red')+
+  geom_point(color = 'red')+
+  facet_wrap(~ injured, scale = 'free_y')+
+  ggtitle('Total Injured vs Weekday')
+
+```
+
+
+```{r}
+accidents%>%
+  group_by(Month, Total.Killed)%>%
+  summarise(killed = n())%>%
+  ggplot(aes(Month, killed))+
+  geom_line(group = 1, color = 'red')+
+  geom_point(color = 'red')+
+  facet_wrap(~ Total.Killed, scale = 'free_y')+
+  ggtitle('Number of People Killed for each Month')
+```
+
+
+```{r}
+accidents$Crash.Type.Code <- gsub("\\..*","",accidents$Crash.Type.Code)
+
+crash_code <- accidents%>%
+  group_by(Crash.Type.Code)%>%
+  summarise(crash_code_count = n())%>%
+  arrange(desc(crash_code_count))%>%
+  slice(1:5)
+
+crash_code %>%
+  ggplot(aes(Crash.Type.Code, crash_code_count, fill = 'crash_code_count'))+
+  geom_bar(stat = 'identity')
+
+```
+
+
+```{r}
+accidents$Driver.Sex = str_trim(accidents$Driver.Sex) 
+sum(is.na(accidents$Driver.Sex))
+
+gender <- accidents %>% 
+  group_by(Month,Driver.Sex)%>%
+  filter(Driver.Sex != ' ')%>%
+  summarise(count =n())
+
+
+ggplot(data = gender, aes(Month, count)) +
+  geom_line(group = 1, color = 'blue') +
+  geom_point(color = 'blue')+
+  facet_wrap(~ Driver.Sex, scales = 'free_y', nrow = 2)+
+  ggtitle('Number of Accidents by Gender for each Month')
+```
+
+```{r}
+gender_week <-  accidents %>% 
+               group_by(Crash.Day.Of.Week,Driver.Sex)%>%
+               filter(Driver.Sex != ' ')%>%
+               summarise(accident_count =n())
+```
+
+
+```{r}
+ggplot(data = gender_week, aes(Crash.Day.Of.Week, accident_count)) +
+  geom_line(group = 1, color = 'blue') +
+  geom_point(color = 'blue')+
+  facet_wrap(~ Driver.Sex, scales = 'free_y', nrow = 2)+
+  ggtitle('Number of Accidents by Gender for Week Days')
+
+
+```
+
+```{r}
+accidents$Longitude <- abs(accidents$Longitude)
+accidents$Longitude <- accidents$Longitude * -1
+
+accidents$County.Name <- tolower(accidents$County.Name)
+
+county_map_data<-map_data("county")
+state_map <- map_data("state")
+nj_df <- subset(state_map, region == "new jersey")
+
+nj_base <- ggplot(data = nj_df, mapping = aes(x = long, y = lat, group = group)) + 
+  coord_fixed(1.3) + 
+  theme_void()+
+  geom_polygon(color = "white", fill = NA)
+
+nj_base + geom_point(data = accidents, aes(x = Longitude, y = Latitude), inherit.aes = FALSE, color = 'red', size = 0.01)
+
+
+```
+
+
+
+```{r}
+correlation = cor(select(accidents, hours, Total.Killed, Total.Injured, Light.Condition, Total.Vehicles.Involved))
+
+
+corrplot(correlation, type = "lower", order = "hclust", 
+         tl.col = "red", tl.srt = 90, title = 'Correlation Map')
+```
+
+```{r}
+
+```
+
+
+```{r}
+
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
