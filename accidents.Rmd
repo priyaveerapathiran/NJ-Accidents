@@ -55,12 +55,16 @@ Removing columns with more missing values
 
 ```{r}
 
-accidents <- FilteredData[,!(colnames(FilteredData) %in% c( 'Distance.To.Cross.Street', 
-                                               'MilePost',
-                                               'Posted.Speed.Cross.Street',
-                                               'Driver.Physical.Status', 
-                                               'month',
-                                               'year','day'))]
+accidents <- FilteredData[,!(colnames(FilteredData) %in% 
+                               c('Distance.To.Cross.Street', 
+                                  'MilePost',                                                         'Posted.Speed.Cross.Street',                                        'Driver.Physical.Status',                                           'month', 'year','day'))]
+
+accidents <- accidents[, !(colnames(accidents) %in%
+                            c('Alcohol.Test.Results',
+                                  'Driver.Physical.Status',
+                                  'Driver.Zip.Code',
+                                  'Temporary.Traffic.Control.Zone',
+                                  'Route '))]
 
 ```
 
@@ -107,6 +111,9 @@ accidents$state <- 'NJ'
 ```
 
 
+
+
+
 Number of accidents in a year
 
 ```{r}
@@ -115,6 +122,16 @@ total_acci <- accidents %>%
               summarise(count_by_year = n())
 total_acci
 ```
+
+
+```{r}
+accidents%>%
+  group_by(Month)%>%
+  summarise(accidents = cumsum(n()))%>%
+  ggplot(aes(Month, accidents))+
+  geom_smooth()
+```
+
 
 Visualizing number of accidents per month
 
@@ -283,7 +300,7 @@ gender <- accidents %>%
 ggplot(data = gender, aes(Month, count)) +
   geom_line(group = 1, color = 'blue') +
   geom_point(color = 'blue')+
-  facet_wrap(~ Driver.Sex, scales = 'free_y', nrow = 2)+
+ facet_wrap(~ Driver.Sex, scales = 'free_y', nrow = 2)+
   ggtitle('Number of Accidents by Gender for each Month')
 ```
 
@@ -332,7 +349,7 @@ Correlation Map
 correlation = cor(select(accidents, hours, Total.Killed, Total.Injured, Light.Condition, Total.Vehicles.Involved))
 
 
-corrplot(correlation, type = "lower", order = "hclust", 
+corrplot(correlation, type = "lower", 
          tl.col = "red", tl.srt = 90, title = 'Correlation Map')
 ```
 
@@ -342,29 +359,23 @@ corrplot(correlation, type = "lower", order = "hclust",
 
 
 ```{r}
+colSums(is.na(FilteredData))
 
 ```
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+
+```{r}
 ```
 
-## R Markdown
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+```{r}
 ```
 
-## Including Plots
 
-You can also embed plots, for example:
+```{r}
+View(FilteredData)
 
-```{r pressure, echo=FALSE}
-plot(pressure)
 ```
+
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
