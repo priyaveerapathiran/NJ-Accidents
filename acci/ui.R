@@ -1,21 +1,3 @@
-#
-# This is the user-interface definition of a Shiny web application. You can
-# run the application by clicking 'Run App' above.
-#
-# Find out more about building applications with Shiny here:
-#
-#    http://shiny.rstudio.com/
-#
-
-library(shiny)
-library(tidyverse)
-accidents <- read_csv('accidents.csv')
-
-case_count = sum(accidents$Case.Number)
-
-# Define UI for application that draws a histogram
-
-
 fluidPage(
   titlePanel("NJ Cases"),
   sidebarLayout(
@@ -31,20 +13,15 @@ fluidPage(
       selectizeInput(inputId = "Crash.Day.Of.Week",
                      label = "Crash.Day.Of.Week",
                      choices = sort(unique(accidents$Crash.Day.Of.Week)))
-      
-    
-      
-      
-    ) 
-),
-    
+       
+    ),
 mainPanel(
-  plotOutput('distplot1')
-        
-      
-      
+  tabsetPanel(
+    tabPanel('plot1', plotOutput('distplot1')),
+    tabPanel('plot2', plotOutput('distplot2')),
+    tabPanel('plot3', plotOutput('hours'))
+    
    )
-  
-
-
+)
+)
 )

@@ -170,6 +170,15 @@ accidents%>%
 
 ```
 
+
+```{r}
+accidents%>%
+  group_by(hours)%>%
+  summarise(total_accidents = n())%>%
+  ggplot(aes(x = hours, y = total_accidents))+
+  geom_bar(stat = 'identity')
+```
+
 Accidents vs Alcohol Involved
 
 ```{r}
