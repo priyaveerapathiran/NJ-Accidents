@@ -1,5 +1,17 @@
 function(input, output) {
   
+  output$year <- renderPlot(
+    accidents%>%
+      filter(Year == input$Year)%>%
+      group_by(Month)%>%
+      summarise(count_by_day = n())%>%
+      ggplot(aes(Month, count_by_day))+
+      geom_line(group = 1, color = 'red')+
+      geom_point(color = 'red')+
+      ggtitle('Number of Accidents by Month')
+    
+  )
+  
   output$distplot1 <- renderPlot(
     accidents%>%
       filter(Year == input$Year & Month == input$Month)%>%
@@ -24,12 +36,6 @@ function(input, output) {
     
   )
   
-  output$hours <- renderPlot(
-    accidents%>%
-    group_by(hours)%>%
-    summarise(total_accidents = n())%>%
-    ggplot(aes(x = hours, y = total_accidents))+
-    geom_bar(stat = 'identity')
-  )
+  
 
 }

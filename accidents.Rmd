@@ -1,6 +1,7 @@
 ---
 title: "accidents"
-output: html_document
+output: powerpoint_presentation
+reference_doc: my-styles.pptx
 date: '2022-05-08'
 ---
 
@@ -10,6 +11,7 @@ Install Packages
 install.packages("plotly")
 install.packages('maps')
 install.packages('usmap')
+install.packages('plyr', repos = "http://cran.us.r-project.org")
 ```
 
 
@@ -28,63 +30,23 @@ library(corrplot)
 
 View Data
 
-```{r}
-View(FilteredData)
-
-dim(FilteredData)
-
-```
-
-DATA CLEANING
-
-Cleaning Date Column and converting it into Year, Month and Day
-
 
 ```{r}
-
-FilteredData$Crash.Date <- as.Date(FilteredData$Crash.Date, "%m/%d/%Y")
-
-FilteredData <- tidyr::separate(FilteredData, 
-                                Crash.Date, c('Year', 'Month', 'Day'),
-                                sep = "-",remove = FALSE)
-
+accident <- read.csv('C:\\Users\\Owner\\OneDrive - Sify Technologies Limited\\Documents\\GitHub\\NJ-Accidents\\acci\\accidents.csv')
 ```
 
 
-Removing columns with more missing values
-
-```{r}
-
-accidents <- FilteredData[,!(colnames(FilteredData) %in% 
-                               c('Distance.To.Cross.Street', 
-                                  'MilePost',                                                         'Posted.Speed.Cross.Street',                                        'Driver.Physical.Status',                                           'month', 'year','day'))]
-
-accidents <- accidents[, !(colnames(accidents) %in%
-                            c('Alcohol.Test.Results',
-                                  'Driver.Physical.Status',
-                                  'Driver.Zip.Code',
-                                  'Temporary.Traffic.Control.Zone',
-                                  'Route '))]
-
-```
-
-
-Dropping rows with missing value
-
-```{r}
-accidents <- accidents %>% drop_na(Latitude, Longitude)
-```
 
 Converting Time into Hours and Minutes
 
 ```{r}
 
-accidents <- accidents%>%
+accident <- accident%>%
   separate(Crash.Time, into = c("hours", "minutes"))
 
-accidents$hours <- as.numeric(accidents$hours)
+accident$hours <- as.numeric(accident$hours)
 
-accidents$hours[is.na(accidents$hours)]<-median(accidents$hours,na.rm=TRUE)
+accident$hours[is.na(accident$hours)]<-median(accident$hours,na.rm=TRUE)
 
 
 ```
@@ -92,14 +54,14 @@ accidents$hours[is.na(accidents$hours)]<-median(accidents$hours,na.rm=TRUE)
 Converting columns from character to numeric
 
 ```{r}
-accidents$Route[is.na(accidents$Route)]<-mean(accidents$Route,na.rm=TRUE)
-accidents$Road.Character[is.na(accidents$Road.Character)]<-mean(accidents$Road.Character,na.rm=TRUE)
-accidents$Surface.Condition[is.na(accidents$Surface.Condition)]<-mean(accidents$Surface.Condition,na.rm=TRUE)
-accidents$ Environmental.Condition[is.na(accidents$ Environmental.Condition)]<-mean(accidents$ Environmental.Condition,na.rm=TRUE)
-accidents$Temporary.Traffic.Control.Zone[is.na(accidents$Temporary.Traffic.Control.Zone)]<-mean(accidents$Temporary.Traffic.Control.Zone,na.rm=TRUE)
-accidents$Road.Surface.Type[is.na(accidents$Road.Surface.Type)]<-mean(accidents$Road.Surface.Type,na.rm=TRUE)
-accidents$Light.Condition[is.na(accidents$Light.Condition)]<-mean(accidents$Light.Condition,na.rm=TRUE)
-accidents$Road.Divided.By[is.na(accidents$Road.Divided.By)]<-mean(accidents$Road.Divided.By,na.rm=TRUE)
+accident$Route[is.na(accident$Route)]<-mean(accident$Route,na.rm=TRUE)
+accident$Road.Character[is.na(accident$Road.Character)]<-mean(accident$Road.Character,na.rm=TRUE)
+accident$Surface.Condition[is.na(accident$Surface.Condition)]<-mean(accident$Surface.Condition,na.rm=TRUE)
+accident$ Environmental.Condition[is.na(accident$ Environmental.Condition)]<-mean(accident$ Environmental.Condition,na.rm=TRUE)
+
+accident$Road.Surface.Type[is.na(accident$Road.Surface.Type)]<-mean(accident$Road.Surface.Type,na.rm=TRUE)
+accident$Light.Condition[is.na(accident$Light.Condition)]<-mean(accident$Light.Condition,na.rm=TRUE)
+accident$Road.Divided.By[is.na(accident$Road.Divided.By)]<-mean(accident$Road.Divided.By,na.rm=TRUE)
 
 ```
 
@@ -107,7 +69,7 @@ Adding column state
 
 
 ```{r}
-accidents$state <- 'NJ'
+accident$state <- 'NJ'
 ```
 
 
@@ -117,29 +79,32 @@ accidents$state <- 'NJ'
 Number of accidents in a year
 
 ```{r}
-total_acci <- accidents %>%
+total_acci <- accident %>%
               group_by(Year)%>%
               summarise(count_by_year = n())
 total_acci
 ```
 
 
+
 ```{r}
-accidents%>%
-  group_by(Month)%>%
-  summarise(accidents = cumsum(n()))%>%
-  ggplot(aes(Month, accidents))+
-  geom_smooth()
+x <- accident$Light.Condition
+h<-hist(x, breaks=10, col="red", xlab="Light condition",
+   main="Accidents ~ Light Condition")
+
 ```
+
+
+
 
 
 Visualizing number of accidents per month
 
-```{r}
-accidents%>%
+```{r dev = 'jpg'}
+accident%>%
   group_by(Month)%>%
-  summarise(accidents = n())%>%
-  ggplot(aes(Month, accidents))+
+  summarise(accident = n())%>%
+  ggplot(aes(Month, accident))+
   geom_line(group = 1, color = 'red')+
   geom_point(color = 'red')+
   ggtitle('Number of Accidents per Month')
@@ -148,7 +113,7 @@ accidents%>%
 Visualizing number of accidents by day
 
 ```{r}
-accidents%>%
+accident%>%
   group_by(Day)%>%
   summarise(count_by_day = n())%>%
   ggplot(aes(Day, count_by_day))+
@@ -160,7 +125,7 @@ accidents%>%
 Accidents on Week of the Day
 
 ```{r}
-accidents%>%
+accident%>%
   group_by(Crash.Day.Of.Week)%>%
   summarise(accidents_by_week = n())%>%
   ggplot(aes(Crash.Day.Of.Week, accidents_by_week))+
@@ -171,8 +136,9 @@ accidents%>%
 ```
 
 
+
 ```{r}
-accidents%>%
+accident%>%
   group_by(hours)%>%
   summarise(total_accidents = n())%>%
   ggplot(aes(x = hours, y = total_accidents))+
@@ -182,7 +148,7 @@ accidents%>%
 Accidents vs Alcohol Involved
 
 ```{r}
-alcohol_count <- accidents %>%
+alcohol_count <- accident %>%
                    group_by(Month, Alcohol.Involved)%>%
                    summarise(alcohol_count = n())
 
@@ -198,7 +164,7 @@ Accidents with alcohol involved vs Week day
 
 
 ```{r}
-accidents%>%
+accident%>%
   group_by(Crash.Day.Of.Week, Alcohol.Involved)%>%
   summarise(alcohol_involved = n())%>%
   ggplot(aes(Crash.Day.Of.Week, alcohol_involved))+
@@ -213,7 +179,7 @@ accidents%>%
 
 ```{r}
 
-accidents%>%
+accident%>%
   group_by(Month,Crash.Day.Of.Week)%>%
   summarise(accident_count = n())%>%
   ggplot(aes(Crash.Day.Of.Week, accident_count))+
@@ -228,12 +194,12 @@ accidents%>%
 Injured vs Month
 
 ```{r}
-accidents <- accidents %>%
+accident <- accident %>%
              mutate(injured = ifelse(
-                     accidents$Total.Injured == 0, "No", "Yes"))
+                     accident$Total.Injured == 0, "No", "Yes"))
 
 
-injured <- accidents%>%
+injured <- accident%>%
             group_by(Month, injured)%>%
             summarise(injured_count = n())
   
@@ -250,7 +216,7 @@ ggplot(data = injured, aes(Month, injured_count)) +
 Injured for Week of the Day
 
 ```{r}
-accidents%>%
+accident%>%
   group_by(Crash.Day.Of.Week, injured)%>%
   summarise(injured_count = n())%>%
   ggplot(aes(Crash.Day.Of.Week, injured_count))+
@@ -265,7 +231,7 @@ accidents%>%
 Total killed vs Month
 
 ```{r}
-accidents%>%
+accident%>%
   group_by(Month, Total.Killed)%>%
   summarise(killed = n())%>%
   ggplot(aes(Month, killed))+
@@ -279,9 +245,9 @@ accidents%>%
 Accidents vs Crash code
 
 ```{r}
-accidents$Crash.Type.Code <- gsub("\\..*","",accidents$Crash.Type.Code)
+accident$Crash.Type.Code <- gsub("\\..*","",accident$Crash.Type.Code)
 
-crash_code <- accidents%>%
+crash_code <- accident%>%
   group_by(Crash.Type.Code)%>%
   summarise(crash_code_count = n())%>%
   arrange(desc(crash_code_count))%>%
@@ -297,10 +263,10 @@ crash_code %>%
 Accidents based on Gender
 
 ```{r}
-accidents$Driver.Sex = str_trim(accidents$Driver.Sex) 
-sum(is.na(accidents$Driver.Sex))
+accident$Driver.Sex = str_trim(accident$Driver.Sex) 
+sum(is.na(accident$Driver.Sex))
 
-gender <- accidents %>% 
+gender <- accident %>% 
   group_by(Month,Driver.Sex)%>%
   filter(Driver.Sex != ' ')%>%
   summarise(count =n())
@@ -313,10 +279,54 @@ ggplot(data = gender, aes(Month, count)) +
   ggtitle('Number of Accidents by Gender for each Month')
 ```
 
+
+```{r}
+accident%>%
+  group_by(County.Name)%>%
+  summarise(total_count = n())%>%
+  filter(rank(desc(total_count)) <= 10)%>%
+  ggplot(aes(y = County.Name, x = total_count, fill = County.Name))+
+  geom_bar(stat = 'identity')
+```
+
+
+
+
+
+```{r}
+accident%>%
+  group_by(Severity)%>%
+  summarise(count = n())%>%
+  ggplot(aes(x = Severity, y = count, fill = Severity))+
+  geom_bar(stat = 'identity')
+```
+
+
+
+```{r}
+accident%>%
+  group_by(Driver.Sex)%>%
+  filter(Driver.Sex != ' ')%>%
+  summarise(total_count = n())%>%
+  ggplot(aes(x = Driver.Sex, y = total_count, fill = Driver.Sex))+
+  geom_bar(stat = 'identity')
+```
+
+
+
+
+```{r}
+accident%>%
+  group_by(Light.Condition)%>%
+  summarise(accidents = n())%>%
+  ggplot(aes(x = Light.Condition, y = accidents))+
+  geom_bar(stat = 'identity')
+```
+
 Accidents based on Gender for week Day
 
 ```{r}
-gender_week <-  accidents %>% 
+gender_week <-  accident %>% 
                group_by(Crash.Day.Of.Week,Driver.Sex)%>%
                filter(Driver.Sex != ' ')%>%
                summarise(accident_count =n())
@@ -333,10 +343,10 @@ ggplot(data = gender_week, aes(Crash.Day.Of.Week, accident_count)) +
 Map view of number of accidents
 
 ```{r}
-accidents$Longitude <- abs(accidents$Longitude)
-accidents$Longitude <- accidents$Longitude * -1
+accident$Longitude <- abs(accident$Longitude)
+accident$Longitude <- accident$Longitude * -1
 
-accidents$County.Name <- tolower(accidents$County.Name)
+accident$County.Name <- tolower(accident$County.Name)
 
 county_map_data<-map_data("county")
 state_map <- map_data("state")
@@ -347,7 +357,7 @@ nj_base <- ggplot(data = nj_df, mapping = aes(x = long, y = lat, group = group))
   theme_void()+
   geom_polygon(color = "white", fill = NA)
 
-nj_base + geom_point(data = accidents, aes(x = Longitude, y = Latitude), inherit.aes = FALSE, color = 'red', size = 0.01)
+nj_base + geom_point(data = accident, aes(x = Longitude, y = Latitude), inherit.aes = FALSE, color = 'red', size = 0.01)
 
 
 ```
@@ -355,7 +365,7 @@ nj_base + geom_point(data = accidents, aes(x = Longitude, y = Latitude), inherit
 Correlation Map
 
 ```{r}
-correlation = cor(select(accidents, hours, Total.Killed, Total.Injured, Light.Condition, Total.Vehicles.Involved))
+correlation = cor(select(accident, hours, Total.Killed, Total.Injured, Light.Condition, Total.Vehicles.Involved))
 
 
 corrplot(correlation, type = "lower", 
