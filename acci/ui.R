@@ -1,14 +1,6 @@
 fluidPage(
   titlePanel("NJ Cases"),
   sidebarLayout(
-    sidebarMenu(
-      menuItem("Time Series", tabName = "Time Series", icon = icon("clock")),
-      menuItem("Univariate", icon = icon("gender"), tabName = "Univariate",
-               badgeLabel = "new", badgeColor = "green")
-    ),
-    
-    
-    
     sidebarPanel(
       selectizeInput(inputId = "Year",
                      label = "Year",
@@ -29,12 +21,6 @@ mainPanel(
     tabPanel('plot2', plotOutput('distplot1')),
     tabPanel('plot3', plotOutput('distplot2'))
     
-   ),
-  
-  tabsetPanel(
-    tabPanel('plot1', plotOutput('year')),
-    tabPanel('plot2', plotOutput('distplot1')),
-    tabPanel('plot3', plotOutput('distplot2'))
-)
+   ))
 )
 )
