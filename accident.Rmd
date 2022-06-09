@@ -550,6 +550,11 @@ ggtitle('Total Number of Accidents based on Crash Code')
 
 ```
 
+```{r}
+plot(accidents_df$light_condition, accidents_df$environmental_condition)
+abline(0, 1)
+```
+
 
 
 ##Number of crashes for each day with alcohol consumption
