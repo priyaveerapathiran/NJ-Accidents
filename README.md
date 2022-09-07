@@ -22,5 +22,10 @@
 3.	Analyzed the data using R packages
 4.	Visualized the data to see what are the major cause for accidents?
 
+**Future Work**
+
+1. To do time series analysis to predict the future accident rate.
+
+
 
 
