@@ -24,7 +24,7 @@
 
 **Future Work**
 
-1. To do time series analysis to predict the future accident rate.
+1. To do time series analysis to predict the future accident rate
 
 
 
