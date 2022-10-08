@@ -8,7 +8,7 @@
 
 **OBJECTIVE**
   
-  Exploratory data analysis using R tools to identify th e possible cause of accidents (such as driver, weather condition, pedestrian, vehicle condition, etc.) in New Jersey.
+  Exploratory data analysis using R tools to identify the possible cause of accidents (such as driver, weather condition, pedestrian, vehicle condition, etc.) in New Jersey.
 
 
 **ABOUT THIS DATASET**
